@@ -160,6 +160,7 @@ proc writeConfig() =
     cfg = newConfig()
 
   cfg.setSectionKey("nwsync_write", "Source", fileSource)
+  cfg.setSectionKey("nwsync_write", "Destination", folderDestination)
   cfg.setSectionKey("nwsync_write", "Verbose", $verbose)
   cfg.setSectionKey("nwsync_write", "Quiet", $quiet)
   modName = textboxModName.text
@@ -174,6 +175,7 @@ proc readConfig() =
   try:
     cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
     fileSource = cfg.getSectionValue("nwsync_write", "Source")
+    folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
     verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
     quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
     modName = cfg.getSectionValue("nwsync_write", "ModName")
