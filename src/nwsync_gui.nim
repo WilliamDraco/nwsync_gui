@@ -18,6 +18,8 @@ app.init()
 
 
 var window = newWindow("NWSync GUI v" & gui_version)
+window.height = 600.scaleToDpi()
+window.width = 600.scaleToDpi()
 window.onCloseClick = proc(event: CloseClickEvent) =
   writeConfig()
   window.dispose()
@@ -56,7 +58,7 @@ buttonHelp.onClick = proc(event: ClickEvent) =
 var containerSourceDestination = newLayoutContainer(Layout_Horizontal)
 containerPrimary.add(containerSourceDestination)
 containerSourceDestination.widthMode = WidthMode_Expand
-containerSourceDestination.maxHeight = 120
+containerSourceDestination.height = 120
 
 var containerSource = newLayoutContainer(Layout_Vertical)
 containerSourceDestination.add(containerSource)
@@ -99,19 +101,19 @@ containerPrimary.add(containerModName)
 containerModName.frame = newFrame("Module Name (blank = extracts from module source if possible)")
 var textboxModName = newTextBox(modName)
 containerModName.add(textboxModName)
-textboxModName.minWidth = 400
+textboxModName.height = 25
 
 var containerModDescription = newLayoutContainer(Layout_Horizontal)
 containerPrimary.add(containerModDescription)
 containerModDescription.frame = newFrame("Module Description (blank = extracts from module source if possible)")
-containerModDescription.maxHeight = 100
 var textareaModDescription = newTextArea(modDescription)
+textareaModDescription.height = 70
 containerModDescription.add(textareaModDescription)
-textareaModDescription.minHeight = 25
-textareaModDescription.maxHeight = 75
+
 
 var containerCheckboxes = newLayoutContainer(Layout_Horizontal)
 containerPrimary.add(containerCheckboxes)
+containerCheckboxes.height = 32
 
 var checkboxVerbose = newCheckbox("Verbose Output")
 containerCheckboxes.add(checkboxVerbose)
@@ -137,10 +139,9 @@ checkboxQuiet.onClick = proc(event: ClickEvent) =
     quiet = false
 
 var taNWSyncOutput = newTextArea()
-var containerOutput = newLayoutContainer(Layout_Vertical)
+var containerOutput = newLayoutContainer(Layout_Horizontal)
 containerPrimary.add(containerOutput)
 containerOutput.frame = newFrame("Output")
-containerOutput.heightMode = HeightMode_Expand
 
 containerOutput.add(taNWSyncOutput)
 taNWSyncOutput.editable = false
