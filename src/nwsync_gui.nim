@@ -3,7 +3,7 @@ import nigui
 
 
 var fileSource, folderDestination, modName, modDescription: string
-var verbose, quiet: bool
+var verbose, quiet, withmod: bool
 const gui_version: string = "0.1.0"
 
 proc writeConfig()
@@ -18,7 +18,7 @@ app.init()
 
 
 var window = newWindow("NWSync GUI v" & gui_version)
-window.height = 600.scaleToDpi()
+window.height = 700.scaleToDpi()
 window.width = 600.scaleToDpi()
 window.onCloseClick = proc(event: CloseClickEvent) =
   writeConfig()
@@ -116,9 +116,14 @@ containerPrimary.add(containerCheckboxes)
 containerCheckboxes.height = 32
 
 var checkboxVerbose = newCheckbox("Verbose Output")
+checkboxVerbose.checked = verbose
 containerCheckboxes.add(checkboxVerbose)
 var checkboxQuiet = newCheckbox("Quite Output")
+checkboxQuiet.checked = quiet
 containerCheckboxes.add(checkboxQuiet)
+var checkboxWithMod = newCheckbox("With Module")
+checkboxWithMod.checked = withmod
+containerCheckboxes.add(checkboxWithMod)
 
 checkboxVerbose.onClick = proc(event: ClickEvent) =
   if checkboxVerbose.checked == false:
@@ -137,6 +142,15 @@ checkboxQuiet.onClick = proc(event: ClickEvent) =
       verbose = false
   else:
     quiet = false
+
+checkboxWithMod.onClick = proc(event:ClickEvent) =
+  if checkboxWithMod.checked == false:
+    withmod = true
+    checkboxWithMod.checked = true
+    window.alert("Check Help to ensure you intend to use this option")
+  else:
+    withmod = false
+
 
 var taNWSyncOutput = newTextArea()
 var containerOutput = newLayoutContainer(Layout_Horizontal)
@@ -164,6 +178,7 @@ proc writeConfig() =
   cfg.setSectionKey("nwsync_write", "Destination", folderDestination)
   cfg.setSectionKey("nwsync_write", "Verbose", $verbose)
   cfg.setSectionKey("nwsync_write", "Quiet", $quiet)
+  cfg.setSectionKey("nwsync_write", "WithMod", $withmod)
   modName = textboxModName.text
   cfg.setSectionKey("nwsync_write", "ModName", modName)
   modDescription = textareaModDescription.text
@@ -179,6 +194,7 @@ proc readConfig() =
     folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
     verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
     quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
+    withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
     modName = cfg.getSectionValue("nwsync_write", "ModName")
     modDescription = cfg.getSectionValue("nwsync_write", "ModDescription")
   except:
@@ -239,6 +255,8 @@ proc constructArgs(): seq[string] =
     result.add("-v")
   elif quiet == true:
     result.add("-q")
+  if withmod == true:
+    result.add("--with-module")
 
   modName = textboxModName.text
   result.add("--name=\"" & modName & "\"")
@@ -302,37 +320,37 @@ proc nwsyncWriteHelp() =
 
   Options:
   Verbose
-  Verbose operation (>= DEBUG).
+    Verbose operation (>= DEBUG).
 
   Quiet
-  Quiet operation (>= WARN).
+    Quiet operation (>= WARN).
 
   With Module
-  Include module contents. This is only useful when packing up
-  a module for full distribution.
-  DO NOT USE THIS FOR PERSISTENT WORLDS.
+    Include module contents. This is only useful when packing up
+    a module for full distribution.
+    DO NOT USE THIS FOR PERSISTENT WORLDS.
 
   No Latest
-  Don't update the latest pointer.
+    Don't update the latest pointer.
 
   Name
-  Override the visible name. Will extract the module name
-  if a module is sourced.
+    Override the visible name. Will extract the module name
+    if a module is sourced.
 
   Description
-  Override the visible description. Will extract module
-  description if a module is sourced.
+    Override the visible description. Will extract module
+    description if a module is sourced.
 
   Rewrite
-  Force rewrite of existing data.
+    Force rewrite of existing data.
 
   Compression
-  Compress repostory data. This saves disk space and speeds
-  up transfers if your webserver does not speak gzip or
-  deflate compression.
+    Compress repostory data. This saves disk space and speeds
+    up transfers if your webserver does not speak gzip or
+    deflate compression.
 
   Group-ID
-  Set a group ID. Do this if you run multiple data sets
-  from the same repository. Manifests with the same ID
-  are considered for auto-removal by clients when
-  superseded by a newer download. [default: 0]""")
+    Set a group ID. Do this if you run multiple data sets
+    from the same repository. Manifests with the same ID
+    are considered for auto-removal by clients when
+    superseded by a newer download. [default: 0]""")
