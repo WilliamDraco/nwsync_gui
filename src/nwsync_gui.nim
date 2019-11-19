@@ -3,8 +3,8 @@ import nigui
 
 
 var fileSource, folderDestination, modName, modDescription: string
-var verbose, quiet, withmod: bool
-const gui_version: string = "0.1.0"
+var verbose, quiet, withmod, forcerewrite: bool
+const gui_version: string = "0.2.0"
 
 proc writeConfig()
 proc readConfig()
@@ -121,6 +121,9 @@ containerCheckboxes.add(checkboxVerbose)
 var checkboxQuiet = newCheckbox("Quite Output")
 checkboxQuiet.checked = quiet
 containerCheckboxes.add(checkboxQuiet)
+var checkboxForceRewrite = newCheckbox("Force Rewrite")
+checkboxForceRewrite.checked = forcerewrite
+containerCheckboxes.add(checkboxForceRewrite)
 var checkboxWithMod = newCheckbox("With Module")
 checkboxWithMod.checked = withmod
 containerCheckboxes.add(checkboxWithMod)
@@ -142,6 +145,12 @@ checkboxQuiet.onClick = proc(event: ClickEvent) =
       verbose = false
   else:
     quiet = false
+
+checkboxForceRewrite.onClick = proc(event:ClickEvent) =
+  if checkboxForceRewrite.checked == false:
+    forcerewrite = true
+  else:
+    forcerewrite = false
 
 checkboxWithMod.onClick = proc(event:ClickEvent) =
   if checkboxWithMod.checked == false:
@@ -178,6 +187,7 @@ proc writeConfig() =
   cfg.setSectionKey("nwsync_write", "Destination", folderDestination)
   cfg.setSectionKey("nwsync_write", "Verbose", $verbose)
   cfg.setSectionKey("nwsync_write", "Quiet", $quiet)
+  cfg.setSectionKey("nwsync_write", "ForceRewrite", $forcerewrite)
   cfg.setSectionKey("nwsync_write", "WithMod", $withmod)
   modName = textboxModName.text
   cfg.setSectionKey("nwsync_write", "ModName", modName)
@@ -194,6 +204,7 @@ proc readConfig() =
     folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
     verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
     quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
+    forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
     withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
     modName = cfg.getSectionValue("nwsync_write", "ModName")
     modDescription = cfg.getSectionValue("nwsync_write", "ModDescription")
@@ -255,6 +266,8 @@ proc constructArgs(): seq[string] =
     result.add("-v")
   elif quiet == true:
     result.add("-q")
+  if forcerewrite == true:
+    result.add("-f")
   if withmod == true:
     result.add("--with-module")
 
@@ -272,9 +285,9 @@ proc nwsyncWrite() =
   if args == @[]:
     return
 
-  var process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})
-  var output = process.outputStream()
-  var errout = process.errorStream()
+  let process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})
+  let output = process.outputStream()
+  let errout = process.errorStream()
 
   while process.running:
     for err in errout.lines:
@@ -342,7 +355,8 @@ proc nwsyncWriteHelp() =
     description if a module is sourced.
 
   Rewrite
-    Force rewrite of existing data.
+    Force rewrite of existing data
+    NOTE: Currently bugged in NWSync itself. No effect.
 
   Compression
     Compress repostory data. This saves disk space and speeds
