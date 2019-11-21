@@ -291,14 +291,16 @@ proc nwsyncWrite() =
 
   while process.running:
     for err in errout.lines:
-      taNWSyncOutput.addLine(err)
-      taNWSyncOutput.forceRedraw()
-      taNWSyncOutput.scrollToBottom()
+      if err != "":
+        taNWSyncOutput.addLine(err)
+        taNWSyncOutput.forceRedraw()
+        taNWSyncOutput.scrollToBottom()
 
     for line in output.lines:
-      taNWSyncOutput.addLine(line)
-      taNWSyncOutput.forceRedraw()
-      taNWSyncOutput.scrollToBottom()
+      if line != "":
+        taNWSyncOutput.addLine(line)
+        taNWSyncOutput.forceRedraw()
+        taNWSyncOutput.scrollToBottom()
 
 proc nwsyncWriteHelp() =
   window.alert("""nwsync_write - GUI updated for 0.2.5
@@ -326,9 +328,9 @@ proc nwsyncWriteHelp() =
 
   * a .mod file, which will read the module and add all HAKs and
     the optional TLK as the game would
-  * any valid other erf container (HAK, ERF) [NOT IMPLIMENTED]
-  * single files, including a TLK file [NOT IMPLIMENTED]
-  * a directory containing single files [NOT IMPLIMENTED]
+  * any valid other erf container (HAK, ERF)
+  * single files, including a TLK file
+  * a directory containing single files [Not Implemented in GUI]
 
 
   Options:
