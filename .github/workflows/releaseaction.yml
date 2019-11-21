@@ -51,6 +51,8 @@ jobs:
           release_name: Release ${{ github.ref }}
           draft: true
           prerelease: false
+      - name: Zip Linux Asset
+        run: zip nwsync_gui-linux.zip nwsync_gui
       - name: Upload Linux Asset
         id: upload-linux-asset
         uses: actions/upload-release-asset@v1.0.1
@@ -58,13 +60,15 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./nwsync_gui
-          asset_name: nwsync_gui
-          asset_content_type: application/octet-stream
+          asset_path: ./nwsync_gui-linux.zip
+          asset_name: nwsync_gui-linux.zip
+          asset_content_type: application/zip
       - name: Retrieve Window Binary
         uses: actions/download-artifact@master
         with:
           name: winbin
+      - name: Zip Windows Asset
+        run: zip nwsync_gui-windows.zip winbin/nwsync_gui.exe
       - name: Upload Windows Asset
         id: upload-windows-asset
         uses: actions/upload-release-asset@v1.0.1
@@ -72,6 +76,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
-          asset_path: ./winbin/nwsync_gui.exe
-          asset_name: nwsync_gui.exe
-          asset_content_type: application/vnd.microsoft.portable-executable     
+          asset_path: ./nwsync_gui-windows.zip
+          asset_name: nwsync_gui-windows.zip
+          asset_content_type: application/zip    
