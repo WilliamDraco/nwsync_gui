@@ -15,8 +15,6 @@ jobs:
         uses: actions/checkout@master
       - name: Install Nim
         uses: jiro4989/setup-nim-action@v1.0.1
-        with:
-          nim-version: '1.0.2'
       - name: build win binary
         run: |
           nimble refresh
@@ -35,8 +33,6 @@ jobs:
         uses: actions/checkout@master
       - name: setup Nim # This would actually build your project, using zip for an example artifact
         uses: jiro4989/setup-nim-action@v1.0.1
-        with:
-          nim-version: '1.0.2'
       - name: Compile Project
         run: |
           nimble refresh
