@@ -1,11 +1,11 @@
-import os, osproc, streams, parsecfg, strutils
+import os, osproc, streams, parsecfg, strutils, times
 import nigui
 
 
 var fileSource, folderDestination, modName, modDescription: string
-var verbose, quiet, withmod, forcerewrite, nolatest, nocompression: bool
+var verbose, quiet, writelogs, withmod, forcerewrite, nolatest, nocompression: bool
 var groupid: int
-const gui_version: string = "0.3.0"
+const gui_version: string = "0.3.1"
 
 proc writeConfig()
 proc readConfig()
@@ -19,7 +19,7 @@ app.init()
 
 
 let window = newWindow("NWSync GUI v" & gui_version)
-window.height = 700.scaleToDpi()
+window.height = 650.scaleToDpi()
 window.width = 600.scaleToDpi()
 window.onCloseClick = proc(event: CloseClickEvent) =
   writeConfig()
@@ -124,6 +124,7 @@ let checkboxVerbose = newCheckbox("Verbose Output")
 let checkboxQuiet = newCheckbox("Quite Output")
 let lableGroupID = newLabel("Group ID: ")
 let textboxGroupID = newTextBox($groupid)
+let checkboxWriteLogs = newCheckbox("Write Logs to Destination")
 let checkboxForceRewrite = newCheckbox("Force Rewrite")
 let checkboxWithMod = newCheckbox("With Module")
 let checkboxNoLatest = newCheckbox("No 'Latest' update")
@@ -131,6 +132,7 @@ let checkboxNoCompression = newCheckbox("Disable Compression")
 checkboxVerbose.checked = verbose
 checkboxQuiet.checked = quiet
 textboxGroupID.width = 50
+checkboxWriteLogs.checked = writelogs
 checkboxForceRewrite.checked = forcerewrite
 checkboxWithMod.checked = withmod
 checkboxNoLatest.checked = nolatest
@@ -139,6 +141,7 @@ containerAdditionalOptionsOne.add(checkboxVerbose)
 containerAdditionalOptionsOne.add(checkboxQuiet)
 containerAdditionalOptionsOne.add(lableGroupID)
 containerAdditionalOptionsOne.add(textboxGroupID)
+containerAdditionalOptionsOne.add(checkboxWriteLogs)
 containerAdditionalOptionsTwo.add(checkboxForceRewrite)
 containerAdditionalOptionsTwo.add(checkboxWithMod)
 containerAdditionalOptionsTwo.add(checkboxNoLatest)
@@ -162,6 +165,12 @@ checkboxQuiet.onClick = proc(event: ClickEvent) =
       verbose = false
   else:
     quiet = false
+
+checkboxWriteLogs.onClick = proc(event:ClickEvent) =
+  if checkboxWriteLogs.checked == false:
+    writelogs = true
+  else:
+    writelogs = false
 
 textboxGroupID.onTextChange = proc(event: TextChangeEvent) =
   if textboxGroupID.text == "":
@@ -231,6 +240,7 @@ proc writeConfig() =
   cfg.setSectionKey("nwsync_write", "Verbose", $verbose)
   cfg.setSectionKey("nwsync_write", "Quiet", $quiet)
   cfg.setSectionKey("nwsync_write", "GroupID", $groupid)
+  cfg.setSectionKey("nwsync_write", "WriteLogs", $writelogs)
   cfg.setSectionKey("nwsync_write", "ForceRewrite", $forcerewrite)
   cfg.setSectionKey("nwsync_write", "WithMod", $withmod)
   cfg.setSectionKey("nwsync_write", "NoLatest", $nolatest)
@@ -251,6 +261,7 @@ proc readConfig() =
     verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
     quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
     groupid = cfg.getSectionValue("nwsync_write", "GroupID").parseInt
+    writelogs = cfg.getSectionValue("nwsync_write", "WriteLogs").parseBool
     forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
     withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
     nolatest = cfg.getSectionValue("nwsync_write", "NoLatest").parseBool
@@ -271,8 +282,7 @@ proc onLoad() =
     return
 
   let output = process.outputStream()
-  window.title = "NWSync GUI v" & gui_version & " - nwsync version: " &
-      output.readline()
+  window.title = "NWSync GUI v" & gui_version & " - nwsync version: " & output.readline()
 
   readConfig()
 
@@ -339,24 +349,47 @@ proc nwsyncWrite() =
   if args == @[]:
     return
 
-  taNWSyncOutput.addLine($args)
+  taNWSyncOutput.text = "Process started with args \n" & $args & "\n\n This should clear in a moment. If it does not, try running with logs enabled to determine the error"
+
+  var logFile: FileStream
+  if writelogs == true:
+    logFile = openFileStream(folderDestination / format(now(),"yyMMdd-HHmmss") & ".txt", fmWrite)
+    logFile.writeLine($args)
 
   let process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})
   let output = process.outputStream()
   let errout = process.errorStream()
 
   while process.running:
-    for err in errout.lines:
-      if err != "":
-        taNWSyncOutput.addLine(err)
-        taNWSyncOutput.forceRedraw()
-        taNWSyncOutput.scrollToBottom()
+    var time1 = getTime()
+    var time2: Time
+    let timeDiff = initDuration(milliseconds = 500)
 
-    for line in output.lines:
-      if line != "":
-        taNWSyncOutput.addLine(line)
-        taNWSyncOutput.forceRedraw()
-        taNWSyncOutput.scrollToBottom()
+    for err in errout.lines:
+      time2 = getTime()
+      if err != "":
+        if writelogs == true:
+          logFile.writeLine(err)
+        if time2 - time1 > timeDiff:
+          taNWSyncOutput.text = err
+          taNWSyncOutput.forceRedraw()
+          taNWSyncOutput.scrollToBottom()
+          app.processEvents()
+          time1 = time2
+
+  taNWSyncOutput.text = ""
+  for line in output.lines:
+    if line != "":
+      if writelogs == true:
+        logFile.writeLine(line)
+      taNWSyncOutput.addLine(line)
+      taNWSyncOutput.forceRedraw()
+      taNWSyncOutput.scrollToBottom()
+      app.processEvents()
+
+  if writelogs == true:
+    logFile.close()
+
 
 proc nwsyncWriteHelp() =
   window.alert("""nwsync_write - GUI updated for 0.2.5

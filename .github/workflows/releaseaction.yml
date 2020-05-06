@@ -14,13 +14,13 @@ jobs:
       - name: Checkout git
         uses: actions/checkout@master
       - name: Install Nim
-        uses: jiro4989/setup-nim-action@v1.0.1
+        uses: jiro4989/setup-nim-action@v1.0.2
       - name: build win binary
         run: |
           nimble refresh
           nimble build -d:release
       - name: Store win binary
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v2
         with:
           name: winbin
           path: nwsync_gui.exe
@@ -32,14 +32,14 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: setup Nim # This would actually build your project, using zip for an example artifact
-        uses: jiro4989/setup-nim-action@v1.0.1
+        uses: jiro4989/setup-nim-action@v1.0.2
       - name: Compile Project
         run: |
           nimble refresh
           nimble build -d:release
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1.0.0
+        uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -51,7 +51,7 @@ jobs:
         run: zip nwsync_gui-linux.zip nwsync_gui
       - name: Upload Linux Asset
         id: upload-linux-asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -60,14 +60,14 @@ jobs:
           asset_name: nwsync_gui-linux.zip
           asset_content_type: application/zip
       - name: Retrieve Window Binary
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v2
         with:
           name: winbin
       - name: Zip Windows Asset
-        run: zip nwsync_gui-windows.zip winbin/nwsync_gui.exe
+        run: zip nwsync_gui-windows.zip nwsync_gui.exe
       - name: Upload Windows Asset
         id: upload-windows-asset
-        uses: actions/upload-release-asset@v1.0.1
+        uses: actions/upload-release-asset@v1.0.2
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
