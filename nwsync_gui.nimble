@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.0"
+version       = "0.3.1"
 author        = "WilliamDraco"
 description   = "An unofficial multi-platform gui wrapper for nwsync"
 license       = "MIT"
