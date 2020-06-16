@@ -1,32 +1,29 @@
-import os, osproc, streams, parsecfg, strutils, times
+import os, osproc, streams, parsecfg, strutils
 import nigui
+import gui_write, lib
 
+const gui_version: string = "0.4.0"
 
-var fileSource, folderDestination, modName, modDescription: string
-var verbose, quiet, writelogs, withmod, forcerewrite, nolatest, nocompression: bool
-var groupid: int
-const gui_version: string = "0.3.1"
+proc writeConfig(opt: var options)
+proc readConfig(): options
+proc onLoad(): options
 
-proc writeConfig()
-proc readConfig()
-proc onLoad()
-proc nwsyncWrite()
-proc chooseSource()
-proc chooseDestination()
 proc nwsyncWriteHelp()
 
 app.init()
 
-
+############### Window Definition
 let window = newWindow("NWSync GUI v" & gui_version)
-window.height = 650.scaleToDpi()
+window.height = 700.scaleToDpi()
 window.width = 600.scaleToDpi()
+
+var opt = onLoad()
+
 window.onCloseClick = proc(event: CloseClickEvent) =
-  writeConfig()
+  writeConfig(opt)
   window.dispose()
 
-onLoad()
-
+############### Primary container and top-buttons.
 let containerPrimary = newLayoutContainer(Layout_Vertical)
 window.add(containerPrimary)
 
@@ -40,238 +37,97 @@ containerTopButtons.add(containerNWSyncButtons)
 containerTopButtons.add(containerHelpButton)
 containerHelpButton.xAlign = XAlign_Right
 
+let containerWrite = newLayoutContainer(Layout_Vertical)
+containerPrimary.add(containerWrite)
+containerWrite.hide()
+generateWriteContainers(containerWrite, opt.addr)
+
+let containerPrint = newLayoutContainer(Layout_Vertical)
+containerPrimary.add(containerPrint)
+containerPrint.hide()
+#generateWriteContainers(containerWrite, opt.addr)
+
+let containerPrune = newLayoutContainer(Layout_Vertical)
+containerPrimary.add(containerPrune)
+containerPrune.hide()
+#generateWriteContainers(containerWrite, opt.addr)
+
 let buttonWrite = newButton("NWSync Write")
 containerNWSyncButtons.add(buttonWrite)
-buttonWrite.onClick = proc(event: ClickEvent) =
-  nwsyncWrite()
-
-let buttonPrint = newButton("Print-ComingSoon") #("NWSync Print")
-containerNWSyncButtons.add(buttonPrint)
+buttonWrite.onClick = proc(event:ClickEvent) =
+  containerPrint.hide()
+  containerPrune.hide()
+  containerWrite.show()
 
 let buttonPrune = newButton("Prune-ComingSoon") #("NWSync Prune")
 containerNWSyncButtons.add(buttonPrune)
+buttonPrune.onClick = proc(event:ClickEvent) =
+  containerPrint.hide()
+  containerWrite.hide()
+  containerPrune.show()
+
+let buttonPrint = newButton("Print-ComingSoon") #("NWSync Print")
+containerNWSyncButtons.add(buttonPrint)
+buttonPrint.onClick = proc(event:ClickEvent) =
+  containerPrune.hide()
+  containerWrite.hide()
+  containerPrint.show()
 
 let buttonHelp = newButton("Help")
 containerHelpButton.add(buttonHelp)
 buttonHelp.onClick = proc(event: ClickEvent) =
   nwsyncWriteHelp()
 
-let containerSourceDestination = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerSourceDestination)
-containerSourceDestination.widthMode = WidthMode_Expand
-containerSourceDestination.height = 120
-
-let containerSource = newLayoutContainer(Layout_Vertical)
-containerSourceDestination.add(containerSource)
-
-let textareaSource = newTextArea()
-textareaSource.text = "Chosen file:\p" & fileSource
-containerSource.add(textareaSource)
-textareaSource.editable = false
-textareaSource.wrap = true
-textareaSource.height = 60
-textareaSource.widthMode = WidthMode_Expand
-
-let buttonChooseSource = newButton("Choose Source...")
-containerSource.add(buttonChooseSource)
-buttonChooseSource.onClick = proc(event: ClickEvent) =
-  chooseSource()
-
-let lableSourceLimit = newLabel("Currently only supports passing a single file")
-containerSource.add(lableSourceLimit)
-
-let containerDestination = newLayoutContainer(Layout_Vertical)
-containerSourceDestination.add(containerDestination)
-
-let textareaDestination = newTextArea()
-containerDestination.add(textareaDestination)
-textareaDestination.text = "NWSync Destination:\p" & folderDestination
-textareaDestination.editable = false
-textareaDestination.wrap = true
-textareaDestination.height = 60
-textareaDestination.widthMode = WidthMode_Expand
-
-let buttonChooseDestination = newButton("Choose Destination...")
-containerDestination.add(buttonChooseDestination)
-buttonChooseDestination.onClick = proc(event: ClickEvent) =
-  chooseDestination()
-
-let containerModName = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerModName)
-containerModName.frame = newFrame("Module Name (blank = extracts from module source if possible)")
-let textboxModName = newTextBox(modName)
-containerModName.add(textboxModName)
-textboxModName.height = 25
-
-let containerModDescription = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerModDescription)
-containerModDescription.frame = newFrame("Module Description (blank = extracts from module source if possible)")
-let textareaModDescription = newTextArea(modDescription)
-textareaModDescription.height = 70
-containerModDescription.add(textareaModDescription)
-
-
-let containerAdditionalOptionsOne = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerAdditionalOptionsOne)
-containerAdditionalOptionsOne.yAlign = YAlign_Center
-containerAdditionalOptionsOne.height = 32
-
-let containerAdditionalOptionsTwo = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerAdditionalOptionsTwo)
-containerAdditionalOptionsTwo.height = 32
-
-let checkboxVerbose = newCheckbox("Verbose Output")
-let checkboxQuiet = newCheckbox("Quite Output")
-let lableGroupID = newLabel("Group ID: ")
-let textboxGroupID = newTextBox($groupid)
-let checkboxWriteLogs = newCheckbox("Write Logs to Destination")
-let checkboxForceRewrite = newCheckbox("Force Rewrite")
-let checkboxWithMod = newCheckbox("With Module")
-let checkboxNoLatest = newCheckbox("No 'Latest' update")
-let checkboxNoCompression = newCheckbox("Disable Compression")
-checkboxVerbose.checked = verbose
-checkboxQuiet.checked = quiet
-textboxGroupID.width = 50
-checkboxWriteLogs.checked = writelogs
-checkboxForceRewrite.checked = forcerewrite
-checkboxWithMod.checked = withmod
-checkboxNoLatest.checked = nolatest
-checkboxNoCompression.checked = nocompression
-containerAdditionalOptionsOne.add(checkboxVerbose)
-containerAdditionalOptionsOne.add(checkboxQuiet)
-containerAdditionalOptionsOne.add(lableGroupID)
-containerAdditionalOptionsOne.add(textboxGroupID)
-containerAdditionalOptionsOne.add(checkboxWriteLogs)
-containerAdditionalOptionsTwo.add(checkboxForceRewrite)
-containerAdditionalOptionsTwo.add(checkboxWithMod)
-containerAdditionalOptionsTwo.add(checkboxNoLatest)
-containerAdditionalOptionsTwo.add(checkboxNoCompression)
-
-
-checkboxVerbose.onClick = proc(event: ClickEvent) =
-  if checkboxVerbose.checked == false:
-    verbose = true
-    if checkboxQuiet.checked == true:
-      checkboxQuiet.checked = false
-      quiet = false
-  else:
-    verbose = false
-
-checkboxQuiet.onClick = proc(event: ClickEvent) =
-  if checkboxQuiet.checked == false:
-    quiet = true
-    if checkboxVerbose.checked == true:
-      checkboxVerbose.checked = false
-      verbose = false
-  else:
-    quiet = false
-
-checkboxWriteLogs.onClick = proc(event:ClickEvent) =
-  if checkboxWriteLogs.checked == false:
-    writelogs = true
-  else:
-    writelogs = false
-
-textboxGroupID.onTextChange = proc(event: TextChangeEvent) =
-  if textboxGroupID.text == "":
-    groupid = 0
-    textboxGroupID.text = "0"
-    return
-
-  try:
-    groupid = textboxGroupID.text.parseInt
-    if groupid < 0:
-      groupid = abs(groupid)
-      textboxGroupID.text = $groupid
-  except ValueError:
-    window.alert("GroupID must be a positive integer")
-    textboxGroupID.text = $groupid
-
-checkboxForceRewrite.onClick = proc(event:ClickEvent) =
-  if checkboxForceRewrite.checked == false:
-    forcerewrite = true
-  else:
-    forcerewrite = false
-
-checkboxWithMod.onClick = proc(event:ClickEvent) =
-  if checkboxWithMod.checked == false:
-    withmod = true
-    checkboxWithMod.checked = true
-    window.alert("Check Help to ensure you intend to use this option")
-  else:
-    withmod = false
-
-checkboxNoLatest.onClick = proc(event:ClickEvent) =
-  if checkboxNoLatest.checked == false:
-    nolatest = true
-  else:
-    nolatest = false
-
-checkboxNoCompression.onClick = proc(event:ClickEvent) =
-  if checkboxNoCompression.checked == false:
-    nocompression = true
-  else:
-    nocompression = false
-
-let taNWSyncOutput = newTextArea()
-let containerOutput = newLayoutContainer(Layout_Horizontal)
-containerPrimary.add(containerOutput)
-containerOutput.frame = newFrame("Output")
-
-containerOutput.add(taNWSyncOutput)
-taNWSyncOutput.editable = false
-taNWSyncOutput.wrap = true
-
 window.show()
 app.run()
 
 
-
 ##########################################################################################
-proc writeConfig() =
+proc writeConfig(opt: var options) =
   var cfg: Config
   try:
     cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
   except:
     cfg = newConfig()
 
-  cfg.setSectionKey("nwsync_write", "Source", fileSource)
-  cfg.setSectionKey("nwsync_write", "Destination", folderDestination)
-  cfg.setSectionKey("nwsync_write", "Verbose", $verbose)
-  cfg.setSectionKey("nwsync_write", "Quiet", $quiet)
-  cfg.setSectionKey("nwsync_write", "GroupID", $groupid)
-  cfg.setSectionKey("nwsync_write", "WriteLogs", $writelogs)
-  cfg.setSectionKey("nwsync_write", "ForceRewrite", $forcerewrite)
-  cfg.setSectionKey("nwsync_write", "WithMod", $withmod)
-  cfg.setSectionKey("nwsync_write", "NoLatest", $nolatest)
-  cfg.setSectionKey("nwsync_write", "NoCompression", $nocompression)
-  modName = textboxModName.text
-  cfg.setSectionKey("nwsync_write", "ModName", modName)
-  modDescription = textareaModDescription.text
-  cfg.setSectionKey("nwsync_write", "ModDescription", modDescription)
+  cfg.setSectionKey("nwsync_write", "Source", opt.fileSource)
+  cfg.setSectionKey("nwsync_write", "Destination", opt.folderDestination)
+  cfg.setSectionKey("nwsync_write", "Verbose", $opt.verbose)
+  cfg.setSectionKey("nwsync_write", "Quiet", $opt.quiet)
+  cfg.setSectionKey("nwsync_write", "GroupID", $opt.groupid)
+  cfg.setSectionKey("nwsync_write", "WriteLogs", $opt.writelogs)
+  cfg.setSectionKey("nwsync_write", "ForceRewrite", $opt.forcerewrite)
+  cfg.setSectionKey("nwsync_write", "WithMod", $opt.withmod)
+  cfg.setSectionKey("nwsync_write", "NoLatest", $opt.nolatest)
+  cfg.setSectionKey("nwsync_write", "NoCompression", $opt.nocompression)
+  cfg.setSectionKey("nwsync_write", "ModName", opt.modName)
+  cfg.setSectionKey("nwsync_write", "ModDescription", opt.modDescription)
   cfg.writeConfig(getAppDir() / "nwsync_gui.cfg")
 
-proc readConfig() =
+proc readConfig(): options =
   var cfg: Config
 
+  var opt: options
   try:
     cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
-    fileSource = cfg.getSectionValue("nwsync_write", "Source")
-    folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
-    verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
-    quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
-    groupid = cfg.getSectionValue("nwsync_write", "GroupID").parseInt
-    writelogs = cfg.getSectionValue("nwsync_write", "WriteLogs").parseBool
-    forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
-    withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
-    nolatest = cfg.getSectionValue("nwsync_write", "NoLatest").parseBool
-    nocompression = cfg.getSectionValue("nwsync_write", "NoCompression").parseBool
-    modName = cfg.getSectionValue("nwsync_write", "ModName")
-    modDescription = cfg.getSectionValue("nwsync_write", "ModDescription").convertLineBreaks
+    opt.fileSource = cfg.getSectionValue("nwsync_write", "Source")
+    opt.folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
+    opt.verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
+    opt.quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
+    opt.groupid = cfg.getSectionValue("nwsync_write", "GroupID").parseInt
+    opt.writelogs = cfg.getSectionValue("nwsync_write", "WriteLogs").parseBool
+    opt.forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
+    opt.withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
+    opt.nolatest = cfg.getSectionValue("nwsync_write", "NoLatest").parseBool
+    opt.nocompression = cfg.getSectionValue("nwsync_write", "NoCompression").parseBool
+    opt.modName = cfg.getSectionValue("nwsync_write", "ModName")
+    opt.modDescription = cfg.getSectionValue("nwsync_write", "ModDescription").convertLineBreaks
   except:
-    return
+    return opt
 
-proc onLoad() =
+  return opt
+
+proc onLoad(): options=
   var process: Process
   try:
     process = startProcess("nwsync_write", getAppDir(), @["--version"], nil, {
@@ -284,111 +140,8 @@ proc onLoad() =
   let output = process.outputStream()
   window.title = "NWSync GUI v" & gui_version & " - nwsync version: " & output.readline()
 
-  readConfig()
+  return readConfig()
 
-proc chooseSource() =
-  let dialog = newOpenFileDialog()
-  dialog.title = "Choose Source"
-  dialog.multiple = false
-  dialog.directory = getHomeDir() / "documents/neverwinter nights/modules"
-  dialog.run()
-
-  if dialog.files.len == 0:
-    window.alert("Please choose a source file")
-    return
-
-  filesource = dialog.files[0]
-  textareaSource.text = "Chosen file:\p" & fileSource
-
-proc chooseDestination() =
-  let dialog = newSelectDirectoryDialog()
-  dialog.title = "Choose Destination"
-  dialog.startDirectory = getAppDir()
-  dialog.run()
-
-  if dialog.selectedDirectory == "":
-    window.alert("Please choose a destination folder")
-    return
-
-  folderDestination = dialog.selectedDirectory
-  textareaDestination.text = "NWSync Destination:\p" & folderDestination
-
-proc constructArgs(): seq[string] =
-  if folderDestination == "":
-    window.alert("Please select a destination folder")
-    return
-  elif fileSource == "":
-    window.alert("Please select at least one Source File")
-    return
-
-  if verbose == true:
-    result.add("-v")
-  elif quiet == true:
-    result.add("-q")
-  if withmod == true:
-    result.add("--with-module")
-  if nolatest == true:
-    result.add("--no-latest")
-  if textboxModName.text != "":
-    result.add("--name=\"" & textboxModName.text & "\"")
-  if textareaModDescription.text != "":
-    result.add("--description=\"" & textareaModDescription.text & "\"")
-  if forcerewrite == true:
-    result.add("-f")
-  if nocompression == true:
-    result.add("--compression=none")
-  if groupid != 0:
-    result.add("--group-id=" & $groupid)
-
-  result.add(folderDestination)
-  result.add(fileSource) #in future will be a for-loop to include all sources
-
-proc nwsyncWrite() =
-  let args = constructArgs()
-
-  if args == @[]:
-    return
-
-  taNWSyncOutput.text = "Process started with args \n" & $args & "\n\n This should clear in a moment. If it does not, try running with logs enabled to determine the error"
-
-  var logFile: FileStream
-  if writelogs == true:
-    logFile = openFileStream(folderDestination / format(now(),"yyMMdd-HHmmss") & ".txt", fmWrite)
-    logFile.writeLine($args)
-
-  let process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})
-  let output = process.outputStream()
-  let errout = process.errorStream()
-
-  while process.running:
-    var time1 = getTime()
-    var time2: Time
-    let timeDiff = initDuration(milliseconds = 500)
-
-    for err in errout.lines:
-      time2 = getTime()
-      if err != "":
-        if writelogs == true:
-          logFile.writeLine(err)
-        if time2 - time1 > timeDiff:
-          taNWSyncOutput.text = err
-          taNWSyncOutput.forceRedraw()
-          taNWSyncOutput.scrollToBottom()
-          app.processEvents()
-          time1 = time2
-
-  taNWSyncOutput.text = ""
-  for line in output.lines:
-    if line != "":
-      if writelogs == true:
-        logFile.writeLine(line)
-      taNWSyncOutput.addLine(line)
-      taNWSyncOutput.forceRedraw()
-      taNWSyncOutput.scrollToBottom()
-      app.processEvents()
-
-  if writelogs == true:
-    logFile.close()
 
 
 proc nwsyncWriteHelp() =
