@@ -1,12 +1,5 @@
-import os, osproc, streams, parsecfg, strutils
 import nigui
-import gui_write, gui_help, lib
-
-const gui_version: string = "0.4.0"
-
-proc writeConfig(opt: var options)
-proc readConfig(): options
-proc onLoad(): options
+import gui_write, gui_print, gui_help, lib
 
 app.init()
 
@@ -15,7 +8,7 @@ let window = newWindow("NWSync GUI v" & gui_version)
 window.height = 700.scaleToDpi()
 window.width = 600.scaleToDpi()
 
-var opt = onLoad()
+var opt = window.onLoad()
 
 window.onCloseClick = proc(event: CloseClickEvent) =
   writeConfig(opt)
@@ -43,7 +36,7 @@ generateWriteContainers(containerWrite, opt.addr)
 let containerPrint = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerPrint)
 containerPrint.hide()
-#generateWriteContainers(containerWrite, opt.addr)
+generatePrintContainers(containerPrint, opt.addr)
 
 let containerPrune = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerPrune)
@@ -57,14 +50,14 @@ buttonWrite.onClick = proc(event:ClickEvent) =
   containerPrune.hide()
   containerWrite.show()
 
-let buttonPrune = newButton("Prune-ComingSoon") #("NWSync Prune")
+let buttonPrune = newButton("NWSync Prune")
 containerNWSyncButtons.add(buttonPrune)
 buttonPrune.onClick = proc(event:ClickEvent) =
   containerPrint.hide()
   containerWrite.hide()
   containerPrune.show()
 
-let buttonPrint = newButton("Print-ComingSoon") #("NWSync Print")
+let buttonPrint = newButton("NWSync Print")
 containerNWSyncButtons.add(buttonPrint)
 buttonPrint.onClick = proc(event:ClickEvent) =
   containerPrune.hide()
@@ -81,61 +74,3 @@ app.run()
 
 
 ##########################################################################################
-proc writeConfig(opt: var options) =
-  var cfg: Config
-  try:
-    cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
-  except:
-    cfg = newConfig()
-
-  cfg.setSectionKey("nwsync_write", "Source", opt.fileSource)
-  cfg.setSectionKey("nwsync_write", "Destination", opt.folderDestination)
-  cfg.setSectionKey("nwsync_write", "Verbose", $opt.verbose)
-  cfg.setSectionKey("nwsync_write", "Quiet", $opt.quiet)
-  cfg.setSectionKey("nwsync_write", "GroupID", $opt.groupid)
-  cfg.setSectionKey("nwsync_write", "WriteLogs", $opt.writelogs)
-  cfg.setSectionKey("nwsync_write", "ForceRewrite", $opt.forcerewrite)
-  cfg.setSectionKey("nwsync_write", "WithMod", $opt.withmod)
-  cfg.setSectionKey("nwsync_write", "NoLatest", $opt.nolatest)
-  cfg.setSectionKey("nwsync_write", "NoCompression", $opt.nocompression)
-  cfg.setSectionKey("nwsync_write", "ModName", opt.modName)
-  cfg.setSectionKey("nwsync_write", "ModDescription", opt.modDescription)
-  cfg.writeConfig(getAppDir() / "nwsync_gui.cfg")
-
-proc readConfig(): options =
-  var cfg: Config
-
-  var opt: options
-  try:
-    cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
-    opt.fileSource = cfg.getSectionValue("nwsync_write", "Source")
-    opt.folderDestination = cfg.getSectionValue("nwsync_write", "Destination")
-    opt.verbose = cfg.getSectionValue("nwsync_write", "Verbose").parseBool
-    opt.quiet = cfg.getSectionValue("nwsync_write", "Quiet").parseBool
-    opt.groupid = cfg.getSectionValue("nwsync_write", "GroupID").parseInt
-    opt.writelogs = cfg.getSectionValue("nwsync_write", "WriteLogs").parseBool
-    opt.forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
-    opt.withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
-    opt.nolatest = cfg.getSectionValue("nwsync_write", "NoLatest").parseBool
-    opt.nocompression = cfg.getSectionValue("nwsync_write", "NoCompression").parseBool
-    opt.modName = cfg.getSectionValue("nwsync_write", "ModName")
-    opt.modDescription = cfg.getSectionValue("nwsync_write", "ModDescription").convertLineBreaks
-  except:
-    return opt
-
-  return opt
-
-proc onLoad(): options=
-  var process: Process
-  try:
-    process = startProcess("nwsync_write", getAppDir(), @["--version"], nil, {
-        poUsePath, poDaemon})
-  except OSError:
-    window.alert("Error: Ensure nwsync_write is in PATH or same directory as nwsync_gui.\n\n" & getCurrentExceptionMsg())
-    window.dispose()
-    return
-
-  let output = process.outputStream()
-  window.title = "NWSync GUI v" & gui_version & " - nwsync version: " & output.readline()
-
-  return readConfig()
