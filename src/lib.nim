@@ -1,11 +1,11 @@
 import os, osproc, streams, parsecfg, strutils
 import nigui
 
-const gui_version*: string = "0.4.0"
+const gui_version*: string = "1.0.0"
 
 type options* = tuple
   fileSource, folderDestination, modName, modDescription, manifestSource: string
-  verbose, quiet, writelogs, withmod, forcerewrite, nolatest, nocompression: bool
+  verbose, quiet, writelogs, withmod, forcerewrite, nolatest, nocompression, dryrun: bool
   groupid: int
 
 proc writeConfig*(opt: var options) =
@@ -30,6 +30,8 @@ proc writeConfig*(opt: var options) =
 
   cfg.setSectionkey("nwsync_print", "ManifestSource", opt.manifestSource)
 
+  cfg.setSectionKey("nwsync_prune", "DryRun", $opt.dryrun)
+
   cfg.writeConfig(getAppDir() / "nwsync_gui.cfg")
 
 proc readConfig(): options =
@@ -52,6 +54,7 @@ proc readConfig(): options =
     opt.modDescription = cfg.getSectionValue("nwsync_write", "ModDescription").convertLineBreaks
 
     opt.manifestSource = cfg.getSectionValue("nwsync_print", "ManifestSource")
+    opt.dryrun = cfg.getSectionValue("nwsync_prune", "DryRun").parseBool
   except:
     return opt
 
@@ -112,5 +115,5 @@ const printHelp* = "nwsync_print\p\p" &
   "This utility prints a manifest in human-readable form. Outputs as txt file next to source manifest.\p\p" &
   "Select a specific manifest from your \"Destination\"\\manifests folder. Pick the file with no extension (not json).\p\p" &
   "Options:\p" &
-  "Verbose - Verbose operation (>= DEBUG). NOTE: No current effect.\p\p" &
-  "Quiet - Quiet operation (>= WARN). NOTE: No current effect."
+  "Verbose - Verbose operation (>= DEBUG).\p\p" &
+  "Quiet - Quiet operation (>= WARN)."

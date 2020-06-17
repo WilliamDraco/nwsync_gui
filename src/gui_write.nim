@@ -67,9 +67,6 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt:ptr options
   textareaModDescription.height = 70
   containerModDescription.add(textareaModDescription)
 
-  textareaModDescription.onTextChange = proc(event: TextChangeEvent) =
-    opt.modDescription = textareaModDescription.text
-
   let containerAdditionalOptionsOne = newLayoutContainer(Layout_Horizontal)
   containerPrimary.add(containerAdditionalOptionsOne)
   containerAdditionalOptionsOne.yAlign = YAlign_Center
@@ -128,6 +125,9 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt:ptr options
 
   textboxModName.onTextChange = proc(event: TextChangeEvent) =
     opt.modName = textboxModName.text
+
+  textareaModDescription.onTextChange = proc(event: TextChangeEvent) =
+    opt.modDescription = textareaModDescription.text
 
   checkboxVerbose.onClick = proc(event: ClickEvent) =
     if checkboxVerbose.checked == false:
@@ -261,7 +261,7 @@ proc nwsyncWrite(opt: ptr options, outlog: TextArea) =
   var logFile: FileStream
   if opt.writelogs == true:
     createDir(opt.folderDestination)
-    logFile = openFileStream(opt.folderDestination / format(now(),"yyMMdd-HHmmss") & ".txt", fmWrite)
+    logFile = openFileStream(opt.folderDestination / format(now(),"yyMMdd-HHmmss") & "_write.txt", fmWrite)
     logFile.writeLine($args)
 
   let process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})

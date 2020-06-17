@@ -26,7 +26,7 @@ proc nwsyncHelp*() =
   let containerHelpTextArea = newLayoutContainer(Layout_Horizontal)
   containerPrimary.add(containerHelpTextArea)
 
-  let textAreaHelpOutput = newTextArea("")
+  let textAreaHelpOutput = newTextArea(writeHelp)
   containerHelpTextArea.add(textAreaHelpOutput)
   textAreaHelpOutput.editable = false
   textAreaHelpOutput.wrap = true

@@ -1,5 +1,5 @@
 import nigui
-import gui_write, gui_print, gui_help, lib
+import gui_write, gui_print, gui_prune, gui_help, lib
 
 app.init()
 
@@ -41,7 +41,7 @@ generatePrintContainers(containerPrint, opt.addr)
 let containerPrune = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerPrune)
 containerPrune.hide()
-#generateWriteContainers(containerWrite, opt.addr)
+generatePruneContainers(containerPrune, opt.addr)
 
 let buttonWrite = newButton("NWSync Write")
 containerNWSyncButtons.add(buttonWrite)

@@ -11,19 +11,19 @@ proc generatePrintContainers*(containerPrimary: LayoutContainer, opt:ptr options
   containerManifest.widthMode = WidthMode_Expand
   containerManifest.height = 120
 
-  let textareaSource = newTextArea()
-  textareaSource.text = "Choose Manifest:\p" & opt.manifestSource
-  containerManifest.add(textareaSource)
-  textareaSource.editable = false
-  textareaSource.wrap = true
-  textareaSource.height = 60
-  textareaSource.widthMode = WidthMode_Expand
+  let textareaManifest = newTextArea()
+  textareaManifest.text = "Choose Manifest:\p" & opt.manifestSource
+  containerManifest.add(textareaManifest)
+  textareaManifest.editable = false
+  textareaManifest.wrap = true
+  textareaManifest.height = 60
+  textareaManifest.widthMode = WidthMode_Expand
 
   let buttonChooseSource = newButton("Choose Manifest...")
   containerManifest.add(buttonChooseSource)
 
-  let lableSourceLimit = newLabel("Select a specific manifest. Pick the one without .json")
-  containerManifest.add(lableSourceLimit)
+  let lableManifest = newLabel("Select a specific manifest. Pick the one without .json")
+  containerManifest.add(lableManifest)
 
   let containerRunButton = newLayoutContainer(Layout_Horizontal)
   containerPrimary.add(containerRunButton)
@@ -58,7 +58,7 @@ proc generatePrintContainers*(containerPrimary: LayoutContainer, opt:ptr options
 
   buttonChooseSource.onClick = proc(event: ClickEvent) =
     opt.chooseManifest()
-    textareaSource.text = "Choose Manifest:\p" & opt.manifestSource
+    textareaManifest.text = "Choose Manifest:\p" & opt.manifestSource
 
   buttonRun.onClick = proc(event: ClickEvent) =
     opt.nwsyncPrint(taNWSyncOutput)
@@ -150,6 +150,7 @@ proc nwsyncPrint(opt: ptr options, outlog: TextArea) =
     if line != "":
       logFile.writeLine(line)
       outlog.addLine(line)
+  outlog.addLine("The print has completed. Please see the txt file created at the manifest's location")
   outlog.forceRedraw()
   outlog.scrollToBottom()
   app.processEvents()
