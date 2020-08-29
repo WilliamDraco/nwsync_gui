@@ -268,6 +268,8 @@ proc nwsyncWrite(opt: ptr options, outlog: TextArea) =
   let output = process.outputStream()
   let errout = process.errorStream()
 
+  var warnings: seq[string]
+
   while process.running:
     var time1 = getTime()
     var time2: Time
@@ -284,6 +286,12 @@ proc nwsyncWrite(opt: ptr options, outlog: TextArea) =
           outlog.scrollToBottom()
           app.processEvents()
           time1 = time2
+        if err.startsWith('E') or err.startsWith('F') or err.startsWith("Error:") or err.startsWith("Fatal:"):
+          let errorWindow = newWindow("")
+          errorWindow.alert("NWSync has encountered a critical error!\n " & err & "\n\nIf this error is unclear, consider running with Logs to make seeking assistance easier.", "NWSync Error")
+          process.terminate
+        if err.startsWith('W'):
+          warnings.add(err)
 
   outlog.text = ""
   for line in output.lines:
@@ -291,9 +299,15 @@ proc nwsyncWrite(opt: ptr options, outlog: TextArea) =
       if opt.writelogs == true:
         logFile.writeLine(line)
       outlog.addLine(line)
-      outlog.forceRedraw()
-      outlog.scrollToBottom()
-      app.processEvents()
+
+  if warnings.len != 0:
+    outlog.addLine("\n Warnings were generated during the process and are repeated here")
+    for warn in warnings:
+      outlog.addLine(warn)
+
+  outlog.forceRedraw()
+  outlog.scrollToBottom()
+  app.processEvents()
 
   if opt.writelogs == true:
     logFile.close()

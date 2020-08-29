@@ -1,4 +1,4 @@
-import os, osproc, streams, times
+import os, osproc, streams, times, strutils
 import nigui
 import lib
 
@@ -144,6 +144,10 @@ proc nwsyncPrint(opt: ptr options, outlog: TextArea) =
           outlog.scrollToBottom()
           app.processEvents()
           time1 = time2
+        if err.startsWith('E') or err.startsWith('F') or err.startsWith("Error:") or err.startsWith("Fatal:"):
+          let errorWindow = newWindow("")
+          errorWindow.alert("NWSync has encountered a critical error!\n " & err, "NWSync Error")
+          process.terminate
 
   outlog.text = ""
   for line in output.lines:
