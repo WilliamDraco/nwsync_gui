@@ -1,12 +1,12 @@
 import os, osproc, streams, strutils, times
 import nigui
-import lib
+import gui_lib
 
-proc chooseSource(opt:ptr options)
-proc chooseDestination(opt:ptr options)
-proc nwsyncWrite(opt: ptr options, outlog: TextArea)
+proc chooseSource(opt: Options)
+proc chooseDestination(opt: Options)
+proc nwsyncWrite(opt:  Options, outlog: TextArea)
 
-proc generateWriteContainers*(containerPrimary: LayoutContainer, opt:ptr options) =
+proc generateWriteContainers*(containerPrimary: LayoutContainer, opt: Options) =
   let containerSourceDestination = newLayoutContainer(Layout_Horizontal)
   containerPrimary.add(containerSourceDestination)
   containerSourceDestination.widthMode = WidthMode_Expand
@@ -195,7 +195,7 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt:ptr options
       opt.nocompression = false
 
 
-proc chooseSource(opt:ptr options) =
+proc chooseSource(opt: Options) =
   let dialog = newOpenFileDialog()
   dialog.title = "Choose Source"
   dialog.multiple = false
@@ -207,7 +207,7 @@ proc chooseSource(opt:ptr options) =
 
   opt.filesource = dialog.files[0]
 
-proc chooseDestination(opt:ptr options) =
+proc chooseDestination(opt: Options) =
   let dialog = newSelectDirectoryDialog()
   dialog.title = "Choose Destination"
   dialog.startDirectory = getAppDir()
@@ -218,7 +218,7 @@ proc chooseDestination(opt:ptr options) =
 
   opt.folderDestination = dialog.selectedDirectory
 
-proc constructArgs(opt: ptr options): seq[string] =
+proc constructArgs(opt: Options): seq[string] =
   let errorWindow = newWindow()
   if opt.folderDestination == "":
     errorWindow.alert("Please select a destination folder")
@@ -250,7 +250,7 @@ proc constructArgs(opt: ptr options): seq[string] =
   result.add(opt.folderDestination)
   result.add(opt.fileSource) #in future will be a for-loop to include all sources
 
-proc nwsyncWrite(opt: ptr options, outlog: TextArea) =
+proc nwsyncWrite(opt: Options, outlog: TextArea) =
   let args = opt.constructArgs()
 
   if args == @[]:

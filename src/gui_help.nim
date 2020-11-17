@@ -1,5 +1,5 @@
 import nigui
-import lib
+import gui_lib
 
 proc nwsyncHelp*() =
   let windowHelp = newWindow("Help Window")

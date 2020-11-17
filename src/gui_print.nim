@@ -1,11 +1,11 @@
 import os, osproc, streams, times, strutils
 import nigui
-import lib
+import gui_lib
 
-proc chooseManifest(opt:ptr options)
-proc nwsyncPrint(opt: ptr options, outlog: TextArea)
+proc chooseManifest(opt: Options)
+proc nwsyncPrint(opt: Options, outlog: TextArea)
 
-proc generatePrintContainers*(containerPrimary: LayoutContainer, opt:ptr options) =
+proc generatePrintContainers*(containerPrimary: LayoutContainer, opt: Options) =
   let containerManifest = newLayoutContainer(Layout_Vertical)
   containerPrimary.add(containerManifest)
   containerManifest.widthMode = WidthMode_Expand
@@ -83,7 +83,7 @@ proc generatePrintContainers*(containerPrimary: LayoutContainer, opt:ptr options
 
 
 
-proc chooseManifest(opt:ptr options) =
+proc chooseManifest(opt: Options) =
   let dialog = newOpenFileDialog()
   dialog.title = "Choose Manifest"
   dialog.multiple = false
@@ -100,7 +100,7 @@ proc chooseManifest(opt:ptr options) =
   else:
     opt.manifestSource = dialog.files[0]
 
-proc constructPrintArgs(opt:ptr options): seq[string] =
+proc constructPrintArgs(opt: Options): seq[string] =
   if opt.manifestSource == "":
     let errorWindow = newWindow()
     errorWindow.alert("Please select a manifest file")
@@ -114,7 +114,7 @@ proc constructPrintArgs(opt:ptr options): seq[string] =
 
   result.add(opt.manifestSource)
 
-proc nwsyncPrint(opt: ptr options, outlog: TextArea) =
+proc nwsyncPrint(opt: Options, outlog: TextArea) =
   let args = constructPrintArgs(opt)
 
   if args == @[]:

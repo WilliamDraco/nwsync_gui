@@ -3,12 +3,13 @@ import nigui
 
 const gui_version*: string = "1.1.0"
 
-type options* = tuple
-  fileSource, folderDestination, modName, modDescription, manifestSource: string
-  verbose, quiet, writelogs, withmod, forcerewrite, nolatest, nocompression, dryrun: bool
-  groupid: int
+type
+  Options* = ref object of RootObj
+    fileSource*, folderDestination*, modName*, modDescription*, manifestSource*: string
+    verbose*, quiet*, writelogs*, withmod*, forcerewrite*, nolatest*, nocompression*, dryrun*: bool
+    groupid*: int
 
-proc writeConfig*(opt: var options) =
+proc writeConfig*(opt: Options) =
   var cfg: Config
   try:
     cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
@@ -34,10 +35,11 @@ proc writeConfig*(opt: var options) =
 
   cfg.writeConfig(getAppDir() / "nwsync_gui.cfg")
 
-proc readConfig(): options =
+proc readConfig(): Options =
   var cfg: Config
 
-  var opt: options
+  var opt: Options
+  new(opt)
   try:
     cfg = loadConfig(getAppDir() / "nwsync_gui.cfg")
     opt.fileSource = cfg.getSectionValue("nwsync_write", "Source")
@@ -60,7 +62,7 @@ proc readConfig(): options =
 
   return opt
 
-proc onLoad*(window: Window): options=
+proc onLoad*(window: Window): Options=
   var process: Process
   try:
     process = startProcess("nwsync_write", getAppDir(), @["--version"], nil, {poUsePath, poDaemon})

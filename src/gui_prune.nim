@@ -1,11 +1,11 @@
 import os, osproc, streams, times, strutils
 import nigui
-import lib
+import gui_lib
 
-proc chooseDestination(opt:ptr options)
-proc nwsyncPrune(opt: ptr options, outlog: TextArea)
+proc chooseDestination(opt: Options)
+proc nwsyncPrune(opt: Options, outlog: TextArea)
 
-proc generatePruneContainers*(containerPrimary: LayoutContainer, opt:ptr options) =
+proc generatePruneContainers*(containerPrimary: LayoutContainer, opt: Options) =
   let containerDestination = newLayoutContainer(Layout_Vertical)
   containerPrimary.add(containerDestination)
   containerDestination.widthMode = WidthMode_Expand
@@ -99,7 +99,7 @@ proc generatePruneContainers*(containerPrimary: LayoutContainer, opt:ptr options
       opt.writelogs = false
 
 
-proc chooseDestination(opt:ptr options) =
+proc chooseDestination(opt: Options) =
   let dialog = newSelectDirectoryDialog()
   dialog.title = "Choose Repository"
   dialog.startDirectory = getAppDir()
@@ -110,7 +110,7 @@ proc chooseDestination(opt:ptr options) =
 
   opt.folderDestination = dialog.selectedDirectory
 
-proc constructPruneArgs(opt:ptr options): seq[string] =
+proc constructPruneArgs(opt: Options): seq[string] =
   if opt.folderDestination == "":
     let errorWindow = newWindow()
     errorWindow.alert("Please select a Repository folder")
@@ -126,7 +126,7 @@ proc constructPruneArgs(opt:ptr options): seq[string] =
 
   result.add(opt.folderDestination)
 
-proc nwsyncPrune(opt: ptr options, outlog: TextArea) =
+proc nwsyncPrune(opt: Options, outlog: TextArea) =
   let args = opt.constructPruneArgs()
 
   if args == @[]:

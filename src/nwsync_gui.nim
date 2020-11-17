@@ -1,5 +1,5 @@
 import nigui
-import gui_write, gui_print, gui_prune, gui_help, lib
+import gui_write, gui_print, gui_prune, gui_help, gui_lib
 
 app.init()
 
@@ -31,17 +31,17 @@ containerHelpButton.xAlign = XAlign_Right
 
 let containerWrite = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerWrite)
-generateWriteContainers(containerWrite, opt.addr)
+generateWriteContainers(containerWrite, opt)
 
 let containerPrint = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerPrint)
 containerPrint.hide()
-generatePrintContainers(containerPrint, opt.addr)
+generatePrintContainers(containerPrint, opt)
 
 let containerPrune = newLayoutContainer(Layout_Vertical)
 containerPrimary.add(containerPrune)
 containerPrune.hide()
-generatePruneContainers(containerPrune, opt.addr)
+generatePruneContainers(containerPrune, opt)
 
 let buttonWrite = newButton("NWSync Write")
 containerNWSyncButtons.add(buttonWrite)
