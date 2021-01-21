@@ -14,7 +14,7 @@ jobs:
       - name: Checkout git
         uses: actions/checkout@master
       - name: Install Nim
-        uses: jiro4989/setup-nim-action@v1.1.2
+        uses: jiro4989/setup-nim-action@v1.1.4
       - name: build win binary
         run: |
           nimble refresh
@@ -32,7 +32,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@master
       - name: setup Nim # This would actually build your project, using zip for an example artifact
-        uses: jiro4989/setup-nim-action@v1.1.2
+        uses: jiro4989/setup-nim-action@v1.1.4
       - name: Compile Project
         run: |
           nimble refresh
@@ -74,4 +74,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
           asset_path: ./nwsync_gui-windows.zip
           asset_name: nwsync_gui-windows.zip
-          asset_content_type: application/zip    
+          asset_content_type: application/zip
