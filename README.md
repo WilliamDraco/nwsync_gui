@@ -2,9 +2,9 @@
 An unofficial multi-platform gui for https://github.com/Beamdog/nwsync
 
 A gui written in nim in order to construct and communicate the command-line arguements for the use of nwsync.
+Updated for nwsync v0.3.1
 
 Use:
-
 1) Download nwsync itself.
 2) Download the nwsync_gui binary from the releases tab, or clone-and-build yourself.
 3) Run it

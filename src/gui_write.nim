@@ -74,32 +74,45 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt: Options) =
 
   let containerAdditionalOptionsTwo = newLayoutContainer(Layout_Horizontal)
   containerPrimary.add(containerAdditionalOptionsTwo)
+  containerAdditionalOptionsTwo.yAlign = YAlign_Center
   containerAdditionalOptionsTwo.height = 32
 
   let checkboxVerbose = newCheckbox("Verbose Output")
   let checkboxQuiet = newCheckbox("Quite Output")
-  let lableGroupID = newLabel("Group ID: ")
+  #let comboboxOutput = newComboBox @["Quiet", "-", "Verbose"] Awaiting new nigui version post 0.2.4
+  let lableGroupID = newLabel("Group ID:")
   let textboxGroupID = newTextBox($opt.groupid)
-  let checkboxWriteLogs = newCheckbox("Write Logs to Destination")
+  let checkboxWriteLogs = newCheckbox("Write Logs")
+  let checkboxWriteOrigin = newCheckbox("Write Origin")
   let checkboxForceRewrite = newCheckbox("Force Rewrite")
   let checkboxWithMod = newCheckbox("With Module")
+  let lableFileSize = newLabel("Filesize limit:")
+  let textboxFileSize = newTextBox($opt.filesizelimit)
   let checkboxNoLatest = newCheckbox("No 'Latest' update")
-  let checkboxNoCompression = newCheckbox("Disable Compression")
+  let checkboxNoCompression = newCheckbox("No Compression")
+
   checkboxVerbose.checked = opt.verbose
   checkboxQuiet.checked = opt.quiet
-  textboxGroupID.width = 50
+  #comboboxOutput.index = opt.outputlvl Awaiting new nigui version post 0.2.4
+  textboxGroupID.width = 40
   checkboxWriteLogs.checked = opt.writelogs
+  checkboxWriteOrigin.checked = opt.writeorigin
   checkboxForceRewrite.checked = opt.forcerewrite
   checkboxWithMod.checked = opt.withmod
+  textboxFileSize.width = 30
   checkboxNoLatest.checked = opt.nolatest
   checkboxNoCompression.checked = opt.nocompression
   containerAdditionalOptionsOne.add(checkboxVerbose)
   containerAdditionalOptionsOne.add(checkboxQuiet)
+  #containerAdditionalOptionsOne.add(comboboxOutput) Awaiting new nigui version post 0.2.4
   containerAdditionalOptionsOne.add(lableGroupID)
   containerAdditionalOptionsOne.add(textboxGroupID)
   containerAdditionalOptionsOne.add(checkboxWriteLogs)
+  containerAdditionalOptionsOne.add(checkboxWriteOrigin)
   containerAdditionalOptionsTwo.add(checkboxForceRewrite)
   containerAdditionalOptionsTwo.add(checkboxWithMod)
+  containerAdditionalOptionsTwo.add(lableFileSize)
+  containerAdditionalOptionsTwo.add(textboxFileSize)
   containerAdditionalOptionsTwo.add(checkboxNoLatest)
   containerAdditionalOptionsTwo.add(checkboxNoCompression)
 
@@ -153,6 +166,12 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt: Options) =
     else:
       opt.writelogs = false
 
+  checkboxWriteOrigin.onClick = proc(event:ClickEvent) =
+    if checkboxWriteOrigin.checked == false:
+      opt.writeorigin = true
+    else:
+      opt.writeorigin = false
+
   textboxGroupID.onTextChange = proc(event: TextChangeEvent) =
     if textboxGroupID.text == "":
       opt.groupid = 0
@@ -181,6 +200,23 @@ proc generateWriteContainers*(containerPrimary: LayoutContainer, opt: Options) =
       errorWindow.dispose()
     else:
       opt.withmod = false
+
+  textboxFileSize.onTextChange = proc(event: TextChangeEvent) =
+    if textboxFileSize.text == "":
+      opt.filesizelimit = 15
+      textboxFileSize.text = "15"
+      return
+    try:
+      opt.filesizelimit = textboxFileSize.text.parseInt
+      if opt.filesizelimit < 1:
+        opt.filesizelimit = 15
+        textboxFileSize.text = "15"
+    except ValueError:
+      textboxFileSize.text = $opt.filesizelimit
+    if opt.filesizelimit > 15:
+      let warnWindow = newWindow()
+      warnWindow.alert("Warning: Files above 15mb in size are rejected on-download by game clients")
+      warnWindow.dispose()
 
   checkboxNoLatest.onClick = proc(event:ClickEvent) =
     if checkboxNoLatest.checked == false:
@@ -246,6 +282,10 @@ proc constructArgs(opt: Options): seq[string] =
     result.add("--compression=none")
   if opt.groupid != 0:
     result.add("--group-id=" & $opt.groupid)
+  if opt.filesizelimit != 15:
+    result.add("--limit-file-size=" & $opt.filesizelimit)
+  if opt.writeorigin == true:
+    result.add("--write-origins")
 
   result.add(opt.folderDestination)
   result.add(opt.fileSource) #in future will be a for-loop to include all sources
