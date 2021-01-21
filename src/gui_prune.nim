@@ -139,7 +139,7 @@ proc nwsyncPrune(opt: Options, outlog: TextArea) =
     logFile = openFileStream(opt.folderDestination / format(now(),"yyMMdd-HHmmss") & "_prune.txt", fmWrite)
     logFile.writeLine($args)
 
-  let process = startProcess("nwsync_prune", getAppDir(), args, nil, {poUsePath, poDaemon})
+  let process = startProcess(findExe("nwsync_prune"), getAppDir(), args, nil, {poUsePath, poDaemon})
   let output = process.outputStream()
   let errout = process.errorStream()
 

@@ -264,7 +264,7 @@ proc nwsyncWrite(opt: Options, outlog: TextArea) =
     logFile = openFileStream(opt.folderDestination / format(now(),"yyMMdd-HHmmss") & "_write.txt", fmWrite)
     logFile.writeLine($args)
 
-  let process = startProcess("nwsync_write", getAppDir(), args, nil, {poUsePath, poDaemon})
+  let process = startProcess(findExe("nwsync_write"), getAppDir(), args, nil, {poUsePath, poDaemon})
   let output = process.outputStream()
   let errout = process.errorStream()
 

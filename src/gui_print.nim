@@ -125,7 +125,7 @@ proc nwsyncPrint(opt: Options, outlog: TextArea) =
   var logFile = openFileStream(opt.manifestSource & ".txt", fmWrite)
   logFile.writeLine($args)
 
-  let process = startProcess("nwsync_print", getAppDir(), args, nil, {poUsePath, poDaemon})
+  let process = startProcess(findExe("nwsync_print"), getAppDir(), args, nil, {poUsePath, poDaemon})
   let output = process.outputStream()
   let errout = process.errorStream()
 

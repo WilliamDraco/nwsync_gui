@@ -1,7 +1,7 @@
 import os, osproc, streams, parsecfg, strutils
 import nigui
 
-const gui_version*: string = "1.1.0"
+const gui_version*: string = "1.1.1"
 
 type
   Options* = ref object of RootObj
@@ -65,7 +65,7 @@ proc readConfig(): Options =
 proc onLoad*(window: Window): Options=
   var process: Process
   try:
-    process = startProcess("nwsync_write", getAppDir(), @["--version"], nil, {poUsePath, poDaemon})
+    process = startProcess(findExe("nwsync_write"), getAppDir(), @["--version"], nil, {poUsePath, poDaemon})
   except OSError:
     window.alert("Error: Ensure nwsync is in PATH or same directory as nwsync_gui.\n\n" & getCurrentExceptionMsg())
     window.dispose()
