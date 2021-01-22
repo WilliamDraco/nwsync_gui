@@ -282,7 +282,7 @@ proc constructArgs(opt: Options): seq[string] =
     result.add("--compression=none")
   if opt.groupid != 0:
     result.add("--group-id=" & $opt.groupid)
-  if opt.filesizelimit != 15:
+  if opt.filesizelimit < 15 and opt.filesizelimit > 0:
     result.add("--limit-file-size=" & $opt.filesizelimit)
   if opt.writeorigin == true:
     result.add("--write-origins")
@@ -329,7 +329,10 @@ proc nwsyncWrite(opt: Options, outlog: TextArea) =
         if err.startsWith('E') or err.startsWith('F') or err.startsWith("Error:") or err.startsWith("Fatal:"):
           let errorWindow = newWindow("")
           errorWindow.alert("NWSync has encountered a critical error!\n " & err & "\n\nIf this error is unclear, consider running with Logs to make seeking assistance easier.", "NWSync Error")
-          process.terminate
+          process.terminate()
+          if opt.writelogs == true:
+            logFile.close()
+          return
         if err.startsWith('W'):
           warnings.add(err)
 

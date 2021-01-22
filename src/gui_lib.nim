@@ -55,7 +55,9 @@ proc readConfig(): Options =
     opt.writeorigin = cfg.getSectionValue("nwsync_write", "WriteOrigin").parseBool
     opt.forcerewrite = cfg.getSectionValue("nwsync_write", "ForceRewrite").parseBool
     opt.withmod = cfg.getSectionValue("nwsync_write", "WithMod").parseBool
-    opt.filesizelimit = cfg.getSectionValue("nwsync_write", "FileSizeLimit", "15").parseInt
+    opt.filesizelimit = cfg.getSectionValue("nwsync_write", "FileSizeLimit").parseInt
+    if opt.filesizelimit <= 0:
+      opt.filesizelimit = 15
     opt.nolatest = cfg.getSectionValue("nwsync_write", "NoLatest").parseBool
     opt.nocompression = cfg.getSectionValue("nwsync_write", "NoCompression").parseBool
 

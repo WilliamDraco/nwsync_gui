@@ -147,7 +147,9 @@ proc nwsyncPrint(opt: Options, outlog: TextArea) =
         if err.startsWith('E') or err.startsWith('F') or err.startsWith("Error:") or err.startsWith("Fatal:"):
           let errorWindow = newWindow("")
           errorWindow.alert("NWSync has encountered a critical error!\n " & err, "NWSync Error")
-          process.terminate
+          process.terminate()
+          logFile.close()
+          return
 
   outlog.text = ""
   for line in output.lines:

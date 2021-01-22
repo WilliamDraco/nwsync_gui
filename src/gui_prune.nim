@@ -164,7 +164,10 @@ proc nwsyncPrune(opt: Options, outlog: TextArea) =
         if err.startsWith('E') or err.startsWith('F') or err.startsWith("Error:") or err.startsWith("Fatal:"):
           let errorWindow = newWindow("")
           errorWindow.alert("NWSync has encountered a critical error!\n " & err & "\n\nIf this error is unclear, consider running with Logs to make seeking assistance easier.", "NWSync Error")
-          process.terminate
+          process.terminate()
+          if opt.writelogs == true:
+            logFile.close()
+          return
         if err.startsWith('W'):
           warnings.add(err)
 
